@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/btcsuite/btcd v0.0.0-20180131084046-50de9da05b50
 	github.com/btcsuite/btcutil v0.0.0-20170726183619-501929d3d046
-	golang.org/x/crypto v0.3.0
+	golang.org/x/crypto v0.0.0-20220924013350-4ba4fb4dd9e7
 )
 
 require (
