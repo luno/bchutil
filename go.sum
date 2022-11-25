@@ -1,0 +1,10 @@
+github.com/btcsuite/btcd v0.0.0-20180131084046-50de9da05b50 h1:7dSFPhpWV/xTVWroKlLFi/GqRqvyCMCIad7KjFHMJnc=
+github.com/btcsuite/btcd v0.0.0-20180131084046-50de9da05b50/go.mod h1:Dmm/EzmjnCiweXmzRIAiUWCInVmPgjkzgv5k4tVyXiQ=
+github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f h1:bAs4lUbRJpnnkd9VhRV3jjAVU7DJVjMaK+IsvSeZvFo=
+github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f/go.mod h1:TdznJufoqS23FtqVCzL0ZqgP5MqXbb4fg/WgDys70nA=
+github.com/btcsuite/btcutil v0.0.0-20170726183619-501929d3d046 h1:U/592rFHSSO4Vl5CO6XOvcx+Q2p+re6nUlu6J7oCv5c=
+github.com/btcsuite/btcutil v0.0.0-20170726183619-501929d3d046/go.mod h1:+5NJ2+qvTyV9exUAL/rxXi3DcLg2Ts+ymUAY5y4NvMg=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+golang.org/x/crypto v0.3.0 h1:a06MkbcxBrEFc0w0QIZWXrH/9cCX6KJyWbBOIwAn+7A=
+golang.org/x/crypto v0.3.0/go.mod h1:hebNnKkNXi2UzZN1eVRvBB7co0a+JxK6XbPiWVs/3J4=
