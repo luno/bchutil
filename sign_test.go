@@ -69,6 +69,13 @@ func TestCalculateSigHash(t *testing.T) {
 		r := bytes.NewReader(raw)
 		msgTx := wire.NewMsgTx(1)
 		msgTx.BtcDecode(r, 1, wire.BaseEncoding)
+
+		signerMap := make(map[wire.OutPoint]*wire.TxOut)
+		for _, in := range msgTx.TxIn {
+			signerMap[in.PreviousOutPoint] = &wire.TxOut{}
+		}
+		prevOutput := txscript.NewMultiPrevOutFetcher(signerMap)
+
 		for idx, _ := range msgTx.TxIn {
 			pubKeyBytes, err := hex.DecodeString(v.Inputs[idx].Pubkey)
 			if err != nil {
@@ -95,8 +102,7 @@ func TestCalculateSigHash(t *testing.T) {
 				t.Error(err)
 			}
 
-			prevOuts := txscript.NewMultiPrevOutFetcher(nil)
-			hash := calcBip143SignatureHash(prevScript, txscript.NewTxSigHashes(msgTx, prevOuts), txscript.SigHashAll, msgTx, idx, v.Inputs[idx].Value)
+			hash := calcBip143SignatureHash(prevScript, txscript.NewTxSigHashes(msgTx, prevOutput), txscript.SigHashAll, msgTx, idx, v.Inputs[idx].Value)
 			if !sig.Verify(hash, pubkey) {
 				t.Errorf("Calcualted invalid hash for vector %d  input %d ", i, idx)
 			}
