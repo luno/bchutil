@@ -25,7 +25,10 @@ const (
 func RawTxInSignature(tx *wire.MsgTx, idx int, subScript []byte,
 	hashType txscript.SigHashType, key *btcec.PrivateKey, amt int64) ([]byte, error) {
 
-	prevOuts := txscript.NewMultiPrevOutFetcher(nil)
+	signerMap := make(map[wire.OutPoint]*wire.TxOut)
+	signerMap[tx.TxIn[idx].PreviousOutPoint] = &wire.TxOut{}
+
+	prevOuts := txscript.NewMultiPrevOutFetcher(signerMap)
 	hash := calcBip143SignatureHash(subScript, txscript.NewTxSigHashes(tx, prevOuts), hashType, tx, idx, amt)
 	signature := ecdsa.Sign(key, hash)
 
