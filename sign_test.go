@@ -70,13 +70,9 @@ func TestCalculateSigHash(t *testing.T) {
 		msgTx := wire.NewMsgTx(1)
 		msgTx.BtcDecode(r, 1, wire.BaseEncoding)
 
-		signerMap := make(map[wire.OutPoint]*wire.TxOut)
-		for _, in := range msgTx.TxIn {
-			signerMap[in.PreviousOutPoint] = &wire.TxOut{}
-		}
-		prevOutput := txscript.NewMultiPrevOutFetcher(signerMap)
+		prevOutput := new(txscript.CannedPrevOutputFetcher)
 
-		for idx, _ := range msgTx.TxIn {
+		for idx := range msgTx.TxIn {
 			pubKeyBytes, err := hex.DecodeString(v.Inputs[idx].Pubkey)
 			if err != nil {
 				t.Error(err)
