@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
 	"golang.org/x/crypto/ripemd160"
 )

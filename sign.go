@@ -5,12 +5,14 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec"
+
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 )
 
 const (
@@ -21,21 +23,19 @@ const (
 // RawTxInSignature returns the serialized ECDSA signature for the input idx of
 // the given transaction, with hashType appended to it.
 func RawTxInSignature(tx *wire.MsgTx, idx int, subScript []byte,
-	hashType txscript.SigHashType, key *btcec.PrivateKey, amt int64) ([]byte, error) {
-
-	hash := calcBip143SignatureHash(subScript, txscript.NewTxSigHashes(tx), hashType, tx, idx, amt)
-	signature, err := key.Sign(hash)
-	if err != nil {
-		return nil, fmt.Errorf("cannot sign tx input: %s", err)
-	}
+	hashType txscript.SigHashType, key *btcec.PrivateKey, amt int64,
+) ([]byte, error) {
+	prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(subScript, amt)
+	hash := calcBip143SignatureHash(subScript, txscript.NewTxSigHashes(tx, prevOutputFetcher), hashType, tx, idx, amt)
+	signature := ecdsa.Sign(key, hash)
 
 	return append(signature.Serialize(), byte(hashType|SigHashForkID)), nil
 }
 
 func SignTxOutput(chainParams *chaincfg.Params, tx *wire.MsgTx, idx int,
 	pkScript []byte, hashType txscript.SigHashType, kdb txscript.KeyDB, sdb txscript.ScriptDB,
-	previousScript []byte, amt int64) ([]byte, error) {
-
+	previousScript []byte, amt int64,
+) ([]byte, error) {
 	sigScript, class, addresses, nrequired, err := sign(chainParams, tx,
 		idx, pkScript, hashType, kdb, sdb, amt)
 	if err != nil {
@@ -77,8 +77,8 @@ func SignTxOutput(chainParams *chaincfg.Params, tx *wire.MsgTx, idx int,
 // wallet if fed an invalid input amount, the real sighash will differ causing
 // the produced signature to be invalid.
 func calcBip143SignatureHash(subScript []byte, sigHashes *txscript.TxSigHashes,
-	hashType txscript.SigHashType, tx *wire.MsgTx, idx int, amt int64) []byte {
-
+	hashType txscript.SigHashType, tx *wire.MsgTx, idx int, amt int64,
+) []byte {
 	// As a sanity check, ensure the passed input index for the transaction
 	// is valid.
 	if idx > len(tx.TxIn)-1 {
@@ -104,7 +104,7 @@ func calcBip143SignatureHash(subScript []byte, sigHashes *txscript.TxSigHashes,
 	// If anyone can pay isn't active, then we can use the cached
 	// hashPrevOuts, otherwise we just write zeroes for the prev outs.
 	if hashType&txscript.SigHashAnyOneCanPay == 0 {
-		sigHash.Write(sigHashes.HashPrevOuts[:])
+		sigHash.Write(sigHashes.HashPrevOutsV0[:])
 	} else {
 		sigHash.Write(zeroHash[:])
 	}
@@ -115,7 +115,7 @@ func calcBip143SignatureHash(subScript []byte, sigHashes *txscript.TxSigHashes,
 	if hashType&txscript.SigHashAnyOneCanPay == 0 &&
 		hashType&sigHashMask != txscript.SigHashSingle &&
 		hashType&sigHashMask != txscript.SigHashNone {
-		sigHash.Write(sigHashes.HashSequence[:])
+		sigHash.Write(sigHashes.HashSequenceV0[:])
 	} else {
 		sigHash.Write(zeroHash[:])
 	}
@@ -146,7 +146,7 @@ func calcBip143SignatureHash(subScript []byte, sigHashes *txscript.TxSigHashes,
 	// pre-image.
 	if hashType&sigHashMask != txscript.SigHashSingle &&
 		hashType&sigHashMask != txscript.SigHashNone {
-		sigHash.Write(sigHashes.HashOutputs[:])
+		sigHash.Write(sigHashes.HashOutputsV0[:])
 	} else if hashType&sigHashMask == txscript.SigHashSingle && idx < len(tx.TxOut) {
 		var b bytes.Buffer
 		wire.WriteTxOut(&b, 0, 0, tx.TxOut[idx])
@@ -169,8 +169,8 @@ func calcBip143SignatureHash(subScript []byte, sigHashes *txscript.TxSigHashes,
 
 func sign(chainParams *chaincfg.Params, tx *wire.MsgTx, idx int,
 	subScript []byte, hashType txscript.SigHashType, kdb txscript.KeyDB, sdb txscript.ScriptDB, amt int64) ([]byte,
-	txscript.ScriptClass, []btcutil.Address, int, error) {
-
+	txscript.ScriptClass, []btcutil.Address, int, error,
+) {
 	class, addresses, nrequired, err := txscript.ExtractPkScriptAddrs(subScript,
 		chainParams)
 	if err != nil {
@@ -214,7 +214,8 @@ func sign(chainParams *chaincfg.Params, tx *wire.MsgTx, idx int,
 // the contract (i.e. nrequired signatures are provided).  Since it is arguably
 // legal to not be able to sign any of the outputs, no error is returned.
 func signMultiSig(tx *wire.MsgTx, idx int, subScript []byte, hashType txscript.SigHashType,
-	addresses []btcutil.Address, nRequired int, kdb txscript.KeyDB, amt int64) ([]byte, bool) {
+	addresses []btcutil.Address, nRequired int, kdb txscript.KeyDB, amt int64,
+) ([]byte, bool) {
 	// We start with a single OP_FALSE to work around the (now standard)
 	// but in the reference implementation that causes a spurious pop at
 	// the end of OP_CHECKMULTISIG.
@@ -248,7 +249,7 @@ func SignatureScript(tx *wire.MsgTx, idx int, subscript []byte, hashType txscrip
 		return nil, err
 	}
 
-	pk := (*btcec.PublicKey)(&privKey.PublicKey)
+	pk := privKey.PubKey()
 	var pkData []byte
 	if compress {
 		pkData = pk.SerializeCompressed()
@@ -261,9 +262,9 @@ func SignatureScript(tx *wire.MsgTx, idx int, subscript []byte, hashType txscrip
 
 func mergeScripts(chainParams *chaincfg.Params, tx *wire.MsgTx, idx int,
 	pkScript []byte, class txscript.ScriptClass, addresses []btcutil.Address,
-	nRequired int, sigScript, prevScript []byte) []byte {
+	nRequired int, sigScript, prevScript []byte,
+) []byte {
 	switch class {
-
 	// It doesn't actually make sense to merge anything other than multiig
 	// and scripthash (because it could contain multisig). Everything else
 	// has either zero signature, can't be spent, or has a single signature
