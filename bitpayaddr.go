@@ -52,7 +52,6 @@ func encodeBitpayAddress(hash160 []byte, netID byte) string {
 // When the address does not encode the network, such as in the case of a raw
 // public key, the address will be associated with the passed defaultNet.
 func DecodeBitpay(addr string, defaultNet *chaincfg.Params) (btcutil.Address, error) {
-
 	// Switch on decoded length to determine the type.
 	decoded, netID, err := base58.CheckDecode(addr)
 	if err != nil {

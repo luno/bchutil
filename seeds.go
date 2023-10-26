@@ -3,19 +3,19 @@ package bchutil
 import "github.com/btcsuite/btcd/chaincfg"
 
 var MainnetDNSSeeds = []chaincfg.DNSSeed{
-	{"seed.bitcoinabc.org", true},
-	{"seed-abc.bitcoinforks.org", true},
-	{"seed.bitcoinunlimited.info", true},
-	{"seed.bitprim.org", true},
-	{"seed.deadalnix.me", true},
+	{Host: "seed.bitcoinabc.org", HasFiltering: true},
+	{Host: "seed-abc.bitcoinforks.org", HasFiltering: true},
+	{Host: "seed.bitcoinunlimited.info", HasFiltering: true},
+	{Host: "seed.bitprim.org", HasFiltering: true},
+	{Host: "seed.deadalnix.me", HasFiltering: true},
 }
 
 var TestnetDNSSeeds = []chaincfg.DNSSeed{
-	{"testnet-seed.bitcoinabc.org", true},
-	{"testnet-seed-abc.bitcoinforks.org", true},
-	{"testnet-seed.bitcoinunlimited.info", true},
-	{"testnet-seed.bitprim.org", true},
-	{"testnet-seed.deadalnix.me", true},
+	{Host: "testnet-seed.bitcoinabc.org", HasFiltering: true},
+	{Host: "testnet-seed-abc.bitcoinforks.org", HasFiltering: true},
+	{Host: "testnet-seed.bitcoinunlimited.info", HasFiltering: true},
+	{Host: "testnet-seed.bitprim.org", HasFiltering: true},
+	{Host: "testnet-seed.deadalnix.me", HasFiltering: true},
 }
 
 func GetDNSSeed(params *chaincfg.Params) []chaincfg.DNSSeed {
