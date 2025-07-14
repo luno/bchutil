@@ -1,6 +1,6 @@
 module github.com/luno/bchutil
 
-go 1.19
+go 1.24.3
 
 require (
 	github.com/btcsuite/btcd v0.24.2
