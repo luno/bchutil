@@ -3,6 +3,7 @@ package bchutil
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -228,7 +229,7 @@ func CreateChecksum(prefix string, payload data) data {
 	// Determine what to XOR into those 8 zeroes.
 	mod := PolyMod(enc)
 	ret := make(data, 8)
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		// Convert the 5-bit groups in mod to checksum values.
 		ret[i] = byte((mod >> uint(5*(7-i))) & 0x1f)
 	}
@@ -241,13 +242,13 @@ func CreateChecksum(prefix string, payload data) data {
 func Encode(prefix string, payload data) string {
 	checksum := CreateChecksum(prefix, payload)
 	combined := Cat(payload, checksum)
-	ret := ""
+	var ret strings.Builder
 
 	for _, c := range combined {
-		ret += string(CHARSET[c])
+		ret.WriteString(string(CHARSET[c]))
 	}
 
-	return ret
+	return ret.String()
 }
 
 /**
@@ -304,15 +305,15 @@ func DecodeCashAddress(str string) (string, data, error) {
 	}
 
 	// Get the prefix.
-	var prefix string
+	var prefix strings.Builder
 	for i := 0; i < prefixSize; i++ {
-		prefix += string(LowerCase(str[i]))
+		prefix.WriteString(string(LowerCase(str[i])))
 	}
 
 	// Decode values.
 	valuesSize := len(str) - 1 - prefixSize
 	values := make(data, valuesSize)
-	for i := 0; i < valuesSize; i++ {
+	for i := range valuesSize {
 		c := byte(str[i+prefixSize+1])
 		// We have an invalid char in there.
 		if c > 127 || CHARSET_REV[c] == -1 {
@@ -323,11 +324,11 @@ func DecodeCashAddress(str string) (string, data, error) {
 	}
 
 	// Verify the checksum.
-	if !VerifyChecksum(prefix, values) {
+	if !VerifyChecksum(prefix.String(), values) {
 		return "", data{}, ErrChecksumMismatch
 	}
 
-	return prefix, values[:len(values)-8], nil
+	return prefix.String(), values[:len(values)-8], nil
 }
 
 func CheckEncodeCashAddress(input []byte, prefix string, t AddressType) string {
