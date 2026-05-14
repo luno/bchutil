@@ -2,7 +2,7 @@ module github.com/luno/bchutil
 
 go 1.26.0
 
-toolchain go1.26.1
+toolchain go1.26.3
 
 require (
 	github.com/btcsuite/btcd v0.25.0
