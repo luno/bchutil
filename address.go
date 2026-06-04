@@ -3,7 +3,7 @@ package bchutil
 import (
 	"errors"
 
-	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/btcutil/v2"
 	"github.com/btcsuite/btcd/txscript"
 )
 
